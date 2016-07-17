@@ -2,6 +2,9 @@ import qualified Data.IntMap as IntMap
 import System.Environment
 import System.Exit
 import System.IO
+import Text.Printf
+
+-- Statistical functions.
 
 incrementValue :: IntMap.IntMap Int -> (Int, Int) -> Int -> IntMap.IntMap Int
 incrementValue map node side = IntMap.insert newKey newValue map
@@ -32,6 +35,8 @@ generateTableStep count sides table
 generateTable :: Int -> Int -> IntMap.IntMap Int
 generateTable count sides = generateTableStep count sides (IntMap.fromList [(0, 1)])
 
+-- I/O functions.
+
 splitOnIncrementalFinish cur strs
     | null cur = reverse strs
     | otherwise = reverse ((reverse cur) : strs)
@@ -48,8 +53,23 @@ splitOn str sym = splitOnIncremental str sym [] []
 
 toInt str = read str :: Int
 
+-- Sums all the counts in a table.
+tableTotal table = IntMap.foldr (\ total current -> total + current) 0 table
+
+digitCount positiveInteger
+    | positiveInteger < 10 = 1
+    | otherwise = 1 + (digitCount (quot positiveInteger 10)) 
+
+rowToString :: (Int, Double) -> Int -> String
+rowToString pair maxKey = printf ("%" ++ (show (digitCount (maxKey))) ++ "d : %.2f%%") (fst pair) (snd pair)
+
+toPercentMap map = IntMap.map (\ count -> 100.0 * (fromIntegral count) / (fromIntegral (tableTotal map))) map
+
+-- Pretty prints a table.
+printTable table = putStr (unlines (fmap (\ pair -> rowToString pair (fst (head (IntMap.toDescList (toPercentMap table))))) (IntMap.toAscList (toPercentMap table))))
+
 parseRollExpression exp
-    | length split == 2 = print (generateTable (toInt (head split)) (toInt (last split)))
+    | length split == 2 = printTable (generateTable (toInt (head split)) (toInt (last split)))
     | otherwise = putStrLn "Unsupported roll expression."
     where
         split = splitOn exp 'd'
