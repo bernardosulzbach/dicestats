@@ -4,6 +4,8 @@ import System.Exit
 import System.IO
 import Text.Printf
 
+import Generator
+
 -- Statistical functions.
 
 incrementValue :: IntMap.IntMap Int -> (Int, Int) -> Int -> IntMap.IntMap Int
@@ -11,6 +13,8 @@ incrementValue map node side = IntMap.insert newKey newValue map
     where
         newKey = (fst node) + side
         newValue = (snd node) + (IntMap.findWithDefault 0 newKey map)
+
+incrementCounter key table = IntMap.insert key (succ (IntMap.findWithDefault 0 key table)) table
 
 addSideStep oldNodes newMap side
     | null oldNodes = newMap
@@ -32,8 +36,12 @@ generateTableStep count sides table
     | count == 0 = table
     | otherwise = generateTableStep (pred count) sides (nextTable sides table)
 
+generateTableFromRolls rolls partialTable
+    | null rolls = partialTable
+    | otherwise = generateTableFromRolls (tail rolls) (incrementCounter (sum (head rolls)) partialTable)
+
 generateTable :: Int -> Int -> IntMap.IntMap Int
-generateTable count sides = generateTableStep count sides (IntMap.fromList [(0, 1)])
+generateTable count sides = generateTableFromRolls (generateRolls (replicate count sides)) (IntMap.empty)
 
 -- I/O functions.
 
