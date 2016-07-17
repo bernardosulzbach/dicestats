@@ -53,6 +53,10 @@ splitOn str sym = splitOnIncremental str sym [] []
 
 toInt str = read str :: Int
 
+toDiceCount str
+    | null str = 1
+    | otherwise = toInt str
+
 -- Sums all the counts in a table.
 tableTotal table = IntMap.foldr (\ total current -> total + current) 0 table
 
@@ -69,7 +73,7 @@ toPercentMap map = IntMap.map (\ count -> 100.0 * (fromIntegral count) / (fromIn
 printTable table = putStr (unlines (fmap (\ pair -> rowToString pair (fst (head (IntMap.toDescList (toPercentMap table))))) (IntMap.toAscList (toPercentMap table))))
 
 parseRollExpression exp
-    | length split == 2 = printTable (generateTable (toInt (head split)) (toInt (last split)))
+    | length split == 2 = printTable (generateTable (toDiceCount (head split)) (toInt (last split)))
     | otherwise = putStrLn "Unsupported roll expression."
     where
         split = splitOn exp 'd'
