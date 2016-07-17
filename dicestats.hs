@@ -61,7 +61,7 @@ digitCount positiveInteger
     | otherwise = 1 + (digitCount (quot positiveInteger 10)) 
 
 rowToString :: (Int, Double) -> Int -> String
-rowToString pair maxKey = printf ("%" ++ (show (digitCount (maxKey))) ++ "d : %.2f%%") (fst pair) (snd pair)
+rowToString pair maxKey = printf ("%" ++ (show (digitCount (maxKey))) ++ "d: %.2f%%") (fst pair) (snd pair)
 
 toPercentMap map = IntMap.map (\ count -> 100.0 * (fromIntegral count) / (fromIntegral (tableTotal map))) map
 
