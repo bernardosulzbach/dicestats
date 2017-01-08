@@ -1,5 +1,5 @@
 name:                dicestats
-version:             0.1.0.0
+version:             1.0.0
 synopsis:            Generate statistics about the rolling of fair dice
 -- description:         
 homepage:            https://github.com/mafagafogigante/dicestats

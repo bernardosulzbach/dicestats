@@ -111,7 +111,7 @@ parseArguments args
     | head args `elem` ["-v", "--version"] = printVersion >> exitSuccess
     | otherwise = parseFullCalculation args 
 
-printVersion = putStrLn "Dice Statistics v1.0"
+printVersion = putStrLn "Dice Statistics v1.0.0"
 printUnrecognizedComparator comparator = putStrLn $ "Unrecognized comparator: " ++ comparator
 printUsage = putStrLn $ "Usage: dicestats xdy [(" ++ intercalate "|" comparators ++ ") z]"
 
