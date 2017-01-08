@@ -3,12 +3,12 @@ module Generator (generateRolls) where
 prependOne :: Int -> [[Int]] -> [[Int]]
 prependOne value lists
     | null lists = []
-    | otherwise = (value : (head lists)) : (prependOne value (tail lists))
+    | otherwise = (value : head lists) : prependOne value (tail lists)
 
 prependMany :: [Int] -> [[Int]] -> [[Int]]
 prependMany values lists
     | null values = lists
-    | otherwise = concatMap (\ value -> prependOne value lists) values
+    | otherwise = concatMap (`prependOne` lists) values
 
 -- Generates rolls for the specified dice configuration.
 -- [4, 6, 8, 8] would generate all the possible results for a d4, d6, d8, d8.
