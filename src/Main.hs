@@ -86,7 +86,10 @@ parseRollExpression exp
     where
         split = splitOn exp 'd'
 
-parseFullCalculation args = parseRollExpression (head args)
+parseFullCalculation args
+    | length args == 1 = parseRollExpression (head args)
+    | length args == 3 = parseRollExpression (head args)
+    | otherwise = printUsage >> exitWithSuccess
 
 parseArguments args
     | null args || elem (head args) ["-h", "--help"] = printUsage >> exitWithSuccess
@@ -94,7 +97,7 @@ parseArguments args
     | otherwise = parseFullCalculation args 
 
 printVersion = putStrLn "Dice Statistics v1.0"
-printUsage = putStrLn "Usage: dicestats xdy [<|>|=] z"
+printUsage = putStrLn "Usage: dicestats xdy [(lt|le|eq|ge|gt) z]"
 
 exitWithSuccess = exitWith ExitSuccess
 
