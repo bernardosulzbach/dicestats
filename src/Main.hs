@@ -1,4 +1,5 @@
 import qualified Data.IntMap as IntMap
+import Data.List
 import System.Environment
 import System.Exit
 import System.IO
@@ -78,7 +79,11 @@ rowToString pair maxKey = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%"
 toPercentMap map = IntMap.map (\ count -> 100.0 * fromIntegral count / fromIntegral (tableTotal map)) map
 
 -- Pretty prints a table.
-printTable table = putStr (unlines (fmap (\ pair -> rowToString pair (fst (head (IntMap.toDescList (toPercentMap table))))) (IntMap.toAscList (toPercentMap table))))
+printTable table = putStr (unlines (fmap (\ pair -> rowToString pair (fst (head (IntMap.toDescList (toPercentMap table))))) ascendingList))
+    where
+        ascendingList = IntMap.toAscList (toPercentMap table)
+
+comparators = ["lt", "le", "eq", "ge", "gt"]
 
 parseRollExpression exp
     | length split == 2 = printTable (generateTable (toDiceCount (head split)) (toInt (last split)))
@@ -86,9 +91,19 @@ parseRollExpression exp
     where
         split = splitOn exp 'd'
 
+parseRollExpressionWithValue arguments
+    | comparator `notElem` comparators = printUnrecognizedComparator comparator >> exitFailure
+    | length split == 2 = printTable (generateTable (toDiceCount (head split)) (toInt (last split)))
+    | otherwise = putStrLn "Unsupported roll expression."
+    where
+        exp = head arguments
+        comparator = arguments !! 1
+        value = arguments !! 2
+        split = splitOn exp 'd'
+
 parseFullCalculation args
     | length args == 1 = parseRollExpression (head args)
-    | length args == 3 = parseRollExpression (head args)
+    | length args == 3 = parseRollExpressionWithValue args
     | otherwise = printUsage >> exitSuccess
 
 parseArguments args
@@ -97,6 +112,7 @@ parseArguments args
     | otherwise = parseFullCalculation args 
 
 printVersion = putStrLn "Dice Statistics v1.0"
-printUsage = putStrLn "Usage: dicestats xdy [(lt|le|eq|ge|gt) z]"
+printUnrecognizedComparator comparator = putStrLn $ "Unrecognized comparator: " ++ comparator
+printUsage = putStrLn $ "Usage: dicestats xdy [(" ++ intercalate "|" comparators ++ ") z]"
 
 main = getArgs >>= parseArguments
