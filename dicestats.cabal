@@ -30,7 +30,7 @@ test-suite tests
   -- other-modules:
   other-modules:        Generator
   -- other-extensions:
-  build-depends:        base >= 4.7 && < 5.0, containers == 0.5.6.2, hspec >= 1.8, HUnit
+  build-depends:        base >= 4.7 && < 5.0, containers == 0.5.6.2, hspec >= 1.8, HUnit, bytestring >= 0.10.4
   hs-source-dirs:       src, tests
   -- configurations:
   type:                 exitcode-stdio-1.0
