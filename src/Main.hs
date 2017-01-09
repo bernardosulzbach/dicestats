@@ -74,8 +74,8 @@ digitCount positiveInteger
     | positiveInteger < 10 = 1
     | otherwise = 1 + digitCount (quot positiveInteger 10)
 
-rowToString :: (Int, Double) -> Int -> String
-rowToString pair maxKey = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%") value probability
+rowToString :: Int -> (Int, Double) -> String
+rowToString maxKey pair = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%") value probability
     where
         value = fst pair
         probability = snd pair
@@ -83,9 +83,11 @@ rowToString pair maxKey = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%"
 toPercentMap map = IntMap.map (\ count -> 100.0 * fromIntegral count / fromIntegral (tableTotal map)) map
 
 -- Pretty prints a table.
-printTable table = putStr (unlines (fmap (\ pair -> rowToString pair (fst (head (IntMap.toDescList (toPercentMap table))))) ascendingList))
+printTable table = putStr $ unlines (fmap printRow ascendingList)
     where
         ascendingList = IntMap.toAscList (toPercentMap table)
+        maximumKey = fst (head (IntMap.toDescList (toPercentMap table)))
+        printRow = rowToString maximumKey
 
 comparators = ["lt", "le", "eq", "ge", "gt"]
 comparatorFunctions :: [Int -> Int -> Bool]
