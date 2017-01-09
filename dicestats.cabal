@@ -17,20 +17,23 @@ executable dicestats
   main-is:              Main.hs
   -- other-modules:
   other-modules:        Generator
-  default-extensions:   OverloadedStrings
   -- other-extensions:
   build-depends:        base >= 4.8 && < 4.9, containers == 0.5.6.2
   hs-source-dirs:       src
+  -- configurations:
+  ghc-options:          -Wall
+  default-extensions:   OverloadedStrings
   default-language:     Haskell2010
 
 test-suite tests
-  type:                 exitcode-stdio-1.0
   main-is:              HUnitTests.hs
   -- other-modules:
   other-modules:        Generator
-  ghc-options:          -Wall
-  default-extensions:   OverloadedStrings
   -- other-extensions:
   build-depends:        base, hspec >= 1.8, HUnit
   hs-source-dirs:       src, tests
+  -- configurations:
+  type:                 exitcode-stdio-1.0
+  ghc-options:          -Wall
+  default-extensions:   OverloadedStrings
   default-language:     Haskell2010
