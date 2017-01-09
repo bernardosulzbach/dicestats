@@ -2,6 +2,19 @@
 
 Command line tool to generate statistics about the rolling of fair die.
 
+## Development Build
+
+```bash
+$ cabal sandbox init
+$ cabal install --enable-tests -j
+```
+
+### Running the tests
+
+```bash
+$ cabal test
+```
+
 ## Usage
 
     $ ./dicestats 2d8
