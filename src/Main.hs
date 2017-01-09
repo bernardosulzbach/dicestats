@@ -1,5 +1,6 @@
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap.Strict as IntMap
 import Data.List
+import Data.Maybe
 import System.Environment
 import System.Exit
 import System.IO
@@ -74,7 +75,10 @@ digitCount positiveInteger
     | otherwise = 1 + digitCount (quot positiveInteger 10)
 
 rowToString :: (Int, Double) -> Int -> String
-rowToString pair maxKey = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%") (fst pair) (snd pair)
+rowToString pair maxKey = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%") value probability
+    where
+        value = fst pair
+        probability = snd pair
 
 toPercentMap map = IntMap.map (\ count -> 100.0 * fromIntegral count / fromIntegral (tableTotal map)) map
 
@@ -84,6 +88,8 @@ printTable table = putStr (unlines (fmap (\ pair -> rowToString pair (fst (head 
         ascendingList = IntMap.toAscList (toPercentMap table)
 
 comparators = ["lt", "le", "eq", "ge", "gt"]
+comparatorFunctions :: [Int -> Int -> Bool]
+comparatorFunctions = [(<), (<=), (==), (>=), (>)]
 
 parseRollExpression exp
     | length split == 2 = printTable (generateTable (toDiceCount (head split)) (toInt (last split)))
@@ -91,15 +97,28 @@ parseRollExpression exp
     where
         split = splitOn exp 'd'
 
+addIfComparator :: (Int -> Bool) -> Int -> Double -> Double -> Double
+addIfComparator function key element value
+    | function key = value + element
+    | otherwise = value
+
+aggregate :: IntMap.IntMap Double -> String -> Int -> Double
+aggregate table comparator value = IntMap.foldrWithKey (addIfComparator appliedComparatorFunction) 0.0 table
+    where
+        comparatorFunction = comparatorFunctions !! fromJust (elemIndex comparator comparators)
+        appliedComparatorFunction = flip comparatorFunction value
+
+parseRollExpressionWithValue :: [String] -> IO ()
 parseRollExpressionWithValue arguments
     | comparator `notElem` comparators = printUnrecognizedComparator comparator >> exitFailure
-    | length split == 2 = printTable (generateTable (toDiceCount (head split)) (toInt (last split)))
+    | length split == 2 = print (aggregate (toPercentMap table) comparator value)
     | otherwise = putStrLn "Unsupported roll expression."
     where
         exp = head arguments
+        value = read (arguments !! 2) :: Int
         comparator = arguments !! 1
-        value = arguments !! 2
         split = splitOn exp 'd'
+        table = generateTable (toDiceCount (head split)) (toInt (last split))
 
 parseFullCalculation args
     | length args == 1 = parseRollExpression (head args)
