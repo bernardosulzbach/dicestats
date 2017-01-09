@@ -8,6 +8,9 @@ import Text.Printf
 
 import Generator
 
+-- String format.
+probabilityFormatString = "P(%s %s %d) = %.2f%%\n"
+
 -- Statistical functions.
 
 incrementValue :: IntMap.IntMap Int -> (Int, Int) -> Int -> IntMap.IntMap Int
@@ -74,8 +77,8 @@ digitCount positiveInteger
     | positiveInteger < 10 = 1
     | otherwise = 1 + digitCount (quot positiveInteger 10)
 
-rowToString :: Int -> (Int, Double) -> String
-rowToString maxKey pair = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%") value probability
+rowToString :: String -> String -> (Int, Double) -> String
+rowToString expression comparator pair = printf probabilityFormatString expression comparator value probability
     where
         value = fst pair
         probability = snd pair
@@ -83,18 +86,23 @@ rowToString maxKey pair = printf ("%" ++ show (digitCount maxKey) ++ "d: %.2f%%"
 toPercentMap map = IntMap.map (\ count -> 100.0 * fromIntegral count / fromIntegral (tableTotal map)) map
 
 -- Pretty prints a table.
-printTable table = putStr $ unlines (fmap printRow ascendingList)
+printTable dice table = putStr $ concat (fmap printRow ascendingList)
     where
         ascendingList = IntMap.toAscList (toPercentMap table)
         maximumKey = fst (head (IntMap.toDescList (toPercentMap table)))
-        printRow = rowToString maximumKey
+        printRow = rowToString dice "=="
 
+comparators :: [String]
 comparators = ["lt", "le", "eq", "ge", "gt"]
+
+comparatorPrettyStrings :: [String]
+comparatorPrettyStrings = ["<", "<=", "=", ">=", ">"]
+
 comparatorFunctions :: [Int -> Int -> Bool]
 comparatorFunctions = [(<), (<=), (==), (>=), (>)]
 
 parseRollExpression exp
-    | length split == 2 = printTable (generateTable (toDiceCount (head split)) (toInt (last split)))
+    | length split == 2 = printTable exp (generateTable (toDiceCount (head split)) (toInt (last split)))
     | otherwise = putStrLn "Unsupported roll expression."
     where
         split = splitOn exp 'd'
@@ -113,12 +121,13 @@ aggregate table comparator value = IntMap.foldrWithKey (addIfComparator appliedC
 parseRollExpressionWithValue :: [String] -> IO ()
 parseRollExpressionWithValue arguments
     | comparator `notElem` comparators = printUnrecognizedComparator comparator >> exitFailure
-    | length split == 2 = print (aggregate (toPercentMap table) comparator value)
+    | length split == 2 = printf probabilityFormatString exp comparatorPrettyString value (aggregate (toPercentMap table) comparator value)
     | otherwise = putStrLn "Unsupported roll expression."
     where
         exp = head arguments
         value = read (arguments !! 2) :: Int
         comparator = arguments !! 1
+        comparatorPrettyString = comparatorPrettyStrings !! fromJust (elemIndex comparator comparators)
         split = splitOn exp 'd'
         table = generateTable (toDiceCount (head split)) (toInt (last split))
 
