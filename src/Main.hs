@@ -146,6 +146,6 @@ parseArguments args
 
 printVersion = putStrLn "Dice Statistics v1.0.0"
 printUnrecognizedComparator comparator = putStrLn $ "Unrecognized comparator: " ++ comparator
-printUsage = putStrLn $ "Usage: dicestats xdy [(" ++ intercalate "|" comparators ++ ") z]"
+printUsage = putStrLn $ "Usage: dicestats xdy [(" ++ intercalate "|" comparators ++ ") [z]]"
 
 main = getArgs >>= parseArguments
