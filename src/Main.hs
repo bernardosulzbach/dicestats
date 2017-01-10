@@ -8,6 +8,15 @@ import Text.Printf
 
 import Generator
 
+comparators :: [String]
+comparators = ["lt", "le", "eq", "ge", "gt"]
+
+comparatorPrettyStrings :: [String]
+comparatorPrettyStrings = ["<", "<=", "=", ">=", ">"]
+
+comparatorFunctions :: [Int -> Int -> Bool]
+comparatorFunctions = [(<), (<=), (==), (>=), (>)]
+
 -- String format.
 probabilityFormatString = "P(%s %s %d) = %.2f%%\n"
 
@@ -86,20 +95,9 @@ rowToString expression comparator pair = printf probabilityFormatString expressi
 toPercentMap map = IntMap.map (\ count -> 100.0 * fromIntegral count / fromIntegral (tableTotal map)) map
 
 -- Pretty prints a table.
-printTable dice table = putStr $ concat (fmap printRow ascendingList)
+printTable dice table = putStr $ concat (fmap (rowToString dice "==") ascendingList)
     where
         ascendingList = IntMap.toAscList (toPercentMap table)
-        maximumKey = fst (head (IntMap.toDescList (toPercentMap table)))
-        printRow = rowToString dice "=="
-
-comparators :: [String]
-comparators = ["lt", "le", "eq", "ge", "gt"]
-
-comparatorPrettyStrings :: [String]
-comparatorPrettyStrings = ["<", "<=", "=", ">=", ">"]
-
-comparatorFunctions :: [Int -> Int -> Bool]
-comparatorFunctions = [(<), (<=), (==), (>=), (>)]
 
 parseRollExpression exp
     | length split == 2 = printTable exp (generateTable (toDiceCount (head split)) (toInt (last split)))
@@ -118,22 +116,27 @@ aggregate table comparator value = IntMap.foldrWithKey (addIfComparator appliedC
         comparatorFunction = comparatorFunctions !! fromJust (elemIndex comparator comparators)
         appliedComparatorFunction = flip comparatorFunction value
 
-parseRollExpressionWithValue :: [String] -> IO ()
+generateValueList :: Int -> Int -> [String] -> [Int]
+generateValueList diceCount diceValue arguments
+    | length arguments < 3 = [diceCount..diceCount*diceValue]
+    | otherwise = [read (arguments !! 2) :: Int]
+
 parseRollExpressionWithValue arguments
     | comparator `notElem` comparators = printUnrecognizedComparator comparator >> exitFailure
-    | length split == 2 = printf probabilityFormatString exp comparatorPrettyString value (aggregate (toPercentMap table) comparator value)
+    | length split == 2 = putStr $ concat $ fmap (rowToString expression comparatorString) (zip values probabilities)
     | otherwise = putStrLn "Unsupported roll expression."
     where
-        exp = head arguments
-        value = read (arguments !! 2) :: Int
-        comparator = arguments !! 1
-        comparatorPrettyString = comparatorPrettyStrings !! fromJust (elemIndex comparator comparators)
-        split = splitOn exp 'd'
+        expression = head arguments
+        split = splitOn expression 'd'
         table = generateTable (toDiceCount (head split)) (toInt (last split))
+        comparator = arguments !! 1
+        comparatorString = comparatorPrettyStrings !! fromJust (elemIndex comparator comparators)
+        values = generateValueList (read (head split) :: Int) (read (split !! 1) :: Int) arguments
+        probabilities = fmap (aggregate (toPercentMap table) comparator) values
 
 parseFullCalculation args
     | length args == 1 = parseRollExpression (head args)
-    | length args == 3 = parseRollExpressionWithValue args
+    | length args >= 2 = parseRollExpressionWithValue args
     | otherwise = printUsage >> exitSuccess
 
 parseArguments args
@@ -143,6 +146,6 @@ parseArguments args
 
 printVersion = putStrLn "Dice Statistics v1.0.0"
 printUnrecognizedComparator comparator = putStrLn $ "Unrecognized comparator: " ++ comparator
-printUsage = putStrLn $ "Usage: dicestats xdy [(" ++ intercalate "|" comparators ++ ") z]"
+printUsage = putStrLn $ "Usage: dicestats xdy [(" ++ intercalate "|" comparators ++ ") [z]]"
 
 main = getArgs >>= parseArguments
